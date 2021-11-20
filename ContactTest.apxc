@@ -1,0 +1,121 @@
+@isTest
+private class ContactTest {
+    
+    //set up and var for tests
+    
+    private static final String lastNameVar = 'Tamisons';
+    private static final String emailVar = 'tamisons@email.com';
+    private static final String emailNewVar = 'tamisons555@email.com';
+    private static final String emailVarInvalid = 'tamisons@mail.ru';
+    private static final Integer emailchangecounterVar = 0;
+    
+    private static final String lastNameForInsert = 'Sammys';
+    private static final String emailForInsert = 'sammmy444@email.com';
+    private static final String emailForInsertInvalid = 'sammmy444@mail.ru';
+    
+    
+    private static final String insertErrorMasegge = 'Inappropriate email';    
+    private static final String updateErrorMasegge = 'Inappropriate new email - no mail.ru in emails!'; 
+    
+    
+    @TestSetup private static void setup(){
+        Contact contactSetUp = new Contact(LastName = lastNameVar,
+                                           Email = emailVar,
+                                           Email_change_counter__c =emailchangecounterVar);
+        insert contactSetUp;  
+    }
+    
+    //insert tests
+    
+    @isTest
+    private static void verifyCorrectEmail(){
+        Contact contact = new Contact(LastName=lastNameForInsert,
+                                      Email = emailForInsert);
+        
+        Test.startTest();
+        insert contact;
+        Test.stopTest();
+        
+        Contact contactFromDB = [SELECT LastName, Email From Contact WHERE Email =:emailForInsert LIMIT 1]; 
+        System.assertEquals(contact.Id, contactFromDB.Id);
+    }
+    
+    @isTest
+    private static void verifyUncorrectEmail(){
+        Contact contact = new Contact(LastName=lastNameForInsert,
+                                      Email = emailForInsertInvalid);
+        
+        Test.startTest();
+        Database.SaveResult result = Database.insert(contact, false);
+        Test.stopTest();
+        
+        
+        System.assertEquals(insertErrorMasegge, result.getErrors()[0].getMessage());
+    }
+    
+    @isTest
+    private static void createTask(){
+        Contact contact = new Contact(LastName=lastNameForInsert,
+                                      Email = emailForInsert);
+        
+        Test.startTest();
+        insert contact;
+        Test.stopTest();
+        
+        Task newTaskForContact = [SELECT whoId FROM Task WHERE whoId =:contact.Id LIMIT 1];                
+        System.assertEquals(contact.Id, newTaskForContact.whoId);
+    }
+    
+    //update tests
+    
+    
+    @isTest
+    private static void UpdateUncorrectEmail(){        
+        Contact contactFromSetUp = [SELECT LastName, Email, Email_change_counter__c FROM Contact WHERE Email =:emailVar LIMIT 1];
+        contactFromSetUp.Email = emailVarInvalid;
+        
+        Test.startTest();
+        Database.SaveResult result = Database.update(contactFromSetUp, false); 
+        Test.stopTest();
+        
+        Contact cont = [SELECT LastName, Email, Email_change_counter__c From Contact WHERE LastName =:lastNameVar LIMIT 1];
+        System.assertEquals(cont.Email_change_counter__c,0);       
+        System.assertEquals(updateErrorMasegge, result.getErrors()[0].getMessage());
+    }
+    
+    
+    @isTest
+    private static void UpdateCorrectEmail(){
+        Contact contactFromSetUp = [SELECT LastName, Email, Email_change_counter__c FROM Contact WHERE Email =:emailVar LIMIT 1];
+        contactFromSetUp.Email = emailNewVar;
+        
+        Test.startTest();
+        update contactFromSetUp;	
+        Test.stopTest();
+        
+        
+        Contact contactFromSetUpGetModified = [SELECT LastName, Email, Email_change_counter__c FROM Contact WHERE Email =:emailNewVar LIMIT 1];
+        Old_email__c oldEmailItem = [SELECT Contact__c, OldEmailValue__c From Old_email__c WHERE Contact__c =:contactFromSetUpGetModified.Id LIMIT 1];
+        
+        System.assertEquals(oldEmailItem.OldEmailValue__c, emailVar);
+        System.assertEquals(contactFromSetUpGetModified.Email, emailNewVar);
+        System.assertEquals(contactFromSetUpGetModified.Email_change_counter__c, 1);     
+    }
+    
+    
+    
+    @isTest
+    private static void UpdateSameEmail(){
+        Contact contactFromSetUp = [SELECT LastName, Email, Email_change_counter__c FROM Contact WHERE Email =:emailVar LIMIT 1];
+        contactFromSetUp.Email = emailVar;
+        
+        Test.startTest();
+        update contactFromSetUp;	
+        Test.stopTest();
+        
+        Contact contactFromSetUpGetModified = [SELECT LastName, Email, Email_change_counter__c FROM Contact WHERE Email =:emailVar LIMIT 1];
+        
+        System.assertEquals(contactFromSetUpGetModified.Email_change_counter__c,0);         
+    }
+ 
+}

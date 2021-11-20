@@ -1,0 +1,8 @@
+trigger NewTaskCreatingContact on Contact (before insert, after insert) {
+    if(Trigger.isAfter){
+        ContactHendler.createTask(Trigger.New);
+    }
+    else{ 
+        ContactHendler.validateEmail(Trigger.New, 'Inappropriate email');
+    }     
+}

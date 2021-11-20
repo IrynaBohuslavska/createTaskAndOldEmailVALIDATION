@@ -1,0 +1,44 @@
+public class ContactHendler {
+    public static void createTask (List<Contact> input){
+        List<Task> tListOfTasks = new List<Task>(); 
+        for(Contact c : input){
+            tListOfTasks.add(new Task(whoId=c.id,
+                                      Status = 'In Progress',
+                                      Subject='Call to customer',
+                                      Priority = 'High',
+                                      ownerid= c.ownerid));
+        }
+        if(tListOfTasks.size() > 0){
+            insert tListOfTasks; 
+        }
+    }
+    
+    public static void validateEmail (List<Contact> input, String message){
+        for(Contact c : input){
+            if (c.Email.contains('@mail.ru')) {
+                c.Email.addError(message);
+            }
+        }
+    }
+    
+    public static void createOldEmail (Map<Id, Contact> oldContacts, Map<Id, Contact> newContacts, String message){
+        List<Old_email__c> oldEmailslist = new List<Old_email__c>();
+        for(Contact c : newContacts.values()){
+            if (c.Email.contains('@mail.ru')) {
+                c.addError(message); 
+            }
+            if(oldContacts.get(c.id).Email != newContacts.get(c.id).Email){
+                c.Email_change_counter__c++;
+                oldEmailslist.add(new Old_email__c(Contact__c = c.Id,
+                                                   Name = 'old email of '+ c.FirstName + '('+ c.Email +')',
+                                                   OldEmailValue__c = oldContacts.get(c.Id).Email));
+                
+            }
+        }
+        if(oldEmailslist.size() > 0){
+            insert oldEmailslist; 
+        } 
+    }
+    
+    
+}

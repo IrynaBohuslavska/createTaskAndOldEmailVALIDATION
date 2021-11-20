@@ -1,0 +1,4 @@
+trigger CreateOldEmailRecordAndIncreaceCounter on Contact (before update) {
+	ContactHendler.createOldEmail(Trigger.oldMap, Trigger.newMap, 'Inappropriate new email - no mail.ru in emails!');
+    
+}
